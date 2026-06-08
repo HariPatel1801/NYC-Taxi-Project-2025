@@ -1,0 +1,28 @@
+{
+	"name": "Raw_NYCTaxiData_greater_src",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "API_LS",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"p_monthGreater": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation",
+				"relativeUrl": {
+					"value": "trip-data/green_tripdata_2025-@{dataset().p_monthGreater}.parquet",
+					"type": "Expression"
+				}
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

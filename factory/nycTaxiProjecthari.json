@@ -1,0 +1,15 @@
+{
+	"name": "nycTaxiProjecthari",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "canadacentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "a99c12f0-b2eb-42e4-99f7-5a795aad09e4",
+		"tenantId": "375f0d6f-8b43-4d47-be1e-bb8816a498d0"
+	}
+}
