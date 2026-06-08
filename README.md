@@ -1,169 +1,368 @@
-# NYC Taxi Data Engineering Project using Azure Data Factory, ADLS Gen2, Databricks & Delta Lake
-Project Overview
-This project demonstrates an end-to-end Azure Data Engineering pipeline using the Medallion Architecture (Bronze, Silver, and Gold layers).
-The solution ingests NYC Taxi data from external sources using Azure Data Factory, stores the raw data in Azure Data Lake Storage Gen2, performs transformations using Azure Databricks, and serves curated datasets through Delta Lake for analytics and reporting.
-Architecture
-Data Flow
-Source Data → Azure Data Factory → ADLS Gen2 (Bronze Layer) → Databricks (Silver Layer) → Databricks + Delta Lake (Gold Layer) → Reporting & Analytics
-Technologies Used
-Azure Data Factory (ADF)
-Azure Data Lake Storage Gen2 (ADLS Gen2)
-Azure Databricks
-Apache Spark (PySpark)
-Delta Lake
-Azure Key Vault
-Azure Active Directory Service Principal
-Power BI
-Project Layers
-1. Ingestion Layer (Bronze)
-Objective
-Load raw NYC Taxi datasets into Azure Data Lake Storage Gen2 without modification.
-Tools Used
+# 🚕 NYC Taxi Data Engineering Project
+
+![Architecture Diagram](architecture-diagram.png)
+
+## 📖 Project Overview
+
+This project demonstrates an **end-to-end Azure Data Engineering Pipeline** built using the **Medallion Architecture (Bronze, Silver, and Gold Layers)**.
+
+The pipeline ingests NYC Taxi datasets using **Azure Data Factory**, stores raw data in **Azure Data Lake Storage Gen2**, performs transformations using **Azure Databricks and PySpark**, and creates analytics-ready datasets using **Delta Lake** for reporting and business intelligence.
+
+---
+
+## 🚀 Project Highlights
+
+✅ End-to-End Azure Data Engineering Pipeline
+
+✅ Medallion Architecture (Bronze → Silver → Gold)
+
+✅ Azure Data Factory Data Ingestion
+
+✅ Azure Data Lake Storage Gen2
+
+✅ Azure Databricks & PySpark Transformations
+
+✅ Azure Key Vault Integration
+
+✅ Databricks Secret Scope Configuration
+
+✅ Delta Lake Implementation
+
+✅ ACID Transactions
+
+✅ Time Travel & Data Versioning
+
+✅ Analytics-Ready Data for Reporting
+
+---
+
+# 🏗️ Architecture
+
+## Data Flow
+
+```text
+Source Data
+     │
+     ▼
 Azure Data Factory
-ADLS Gen2
-Process
-Source taxi data is extracted through API/files.
-Azure Data Factory pipelines(HTTP Activity) ingest the data.
-Raw files are stored in the Bronze container.
-Bronze Storage Structure
+     │
+     ▼
+ADLS Gen2 (Bronze Layer)
+     │
+     ▼
+Azure Databricks (Silver Layer)
+     │
+     ▼
+Delta Lake (Gold Layer)
+     │
+     ▼
+Power BI Reporting
+```
+
+---
+
+## 🛠️ Technologies Used
+
+| Technology                   | Purpose                   |
+| ---------------------------- | ------------------------- |
+| Azure Data Factory           | Data Ingestion            |
+| Azure Data Lake Storage Gen2 | Data Storage              |
+| Azure Databricks             | Data Processing           |
+| PySpark                      | Data Transformation       |
+| Delta Lake                   | Data Management           |
+| Azure Key Vault              | Secret Management         |
+| Service Principal            | Secure Authentication     |
+| Power BI                     | Reporting & Visualization |
+
+---
+
+# 🥉 Bronze Layer - Data Ingestion
+
+## Objective
+
+Store raw datasets exactly as received from the source system.
+
+## Process
+
+1. Source NYC Taxi datasets are collected.
+2. Azure Data Factory pipelines ingest the data.
+3. Raw files are stored in Azure Data Lake Storage Gen2.
+4. Data remains unchanged for audit and reprocessing purposes.
+
+## Bronze Storage Structure
+
+```text
 bronze/
 │
 ├── Taxi-Trip-Data-2025/
 ├── trip_type/
 └── trip_zone/
-Benefits
-Preserves original source data.
-Supports data auditing and reprocessing.
-Provides a single source of truth.
-2. Security Layer
-Azure Key Vault
-Sensitive credentials are stored securely in Azure Key Vault:
-Client ID
-Client Secret
-Tenant ID
-Databricks Secret Scope
-Secrets are accessed inside Databricks notebooks using:
-secret_key = dbutils.secrets.get("my_scope","secret-key")
-client_id = dbutils.secrets.get("my_scope","client-id")
-tenant_id = dbutils.secrets.get("my_scope","tenant-id")
-Benefits
-No hardcoded credentials.
-Centralized secret management.
-Secure authentication to Azure Storage.
-3. Silver Layer (Transformation)
-Objective
-Clean and transform raw datasets.
-Input
-Data is read from the Bronze layer.
-Datasets Processed
-Trip Type Dataset
+```
+
+## Benefits
+
+* Preserves raw source data
+* Supports data lineage
+* Enables reprocessing when required
+* Maintains source-of-truth datasets
+
+---
+
+# 🔐 Security Layer
+
+## Azure Key Vault
+
+Sensitive credentials are securely stored in Azure Key Vault:
+
+* Client ID
+* Client Secret
+* Tenant ID
+
+## Databricks Secret Scope
+
+Secrets are accessed securely inside Databricks notebooks.
+
+```python
+secret_key = dbutils.secrets.get("my_scope", "secret-key")
+client_id = dbutils.secrets.get("my_scope", "client-id")
+tenant_id = dbutils.secrets.get("my_scope", "tenant-id")
+```
+
+## Benefits
+
+* No hardcoded credentials
+* Centralized secret management
+* Secure authentication to Azure Storage
+* Improved security and governance
+
+---
+
+# 🥈 Silver Layer - Data Transformation
+
+## Objective
+
+Transform, clean, and standardize raw datasets for analytics.
+
+### Trip Type Dataset
+
 Transformations:
-Rename description column to trip_description.
-Standardize schema.
-Example:
+
+* Renamed columns
+* Standardized schema
+
+```python
 df_trip_type = df_trip_type.withColumnRenamed(
     "description",
     "trip_description"
 )
-Trip Zone Dataset
+```
+
+---
+
+### Trip Zone Dataset
+
 Transformations:
-Split zone field into multiple attributes.
-Improve reporting usability.
-Example:
+
+* Split zone field into separate attributes
+* Improved reporting usability
+
+```python
 df_trip_zone = df_trip_zone \
     .withColumn("zone1", split(col("zone"), "/")[0]) \
     .withColumn("zone2", split(col("zone"), "/")[1])
-Taxi Trip Dataset
+```
+
+---
+
+### Taxi Trip Dataset
+
 Transformations:
-Applied predefined schema.
-Converted data types.
-Standardized timestamps.
-Validated structure.
-Example:
+
+* Applied predefined schema
+* Standardized data types
+* Converted timestamp fields
+* Performed data validation
+
+```python
 df_trip = spark.read.format("parquet") \
     .schema(myschema) \
     .load(bronze_path)
-Output
-Transformed datasets are written into the Silver container.
+```
+
+---
+
+## Silver Storage Structure
+
+```text
 silver/
 │
 ├── trip_type/
 ├── trip_zone/
 └── trip_data/
-Benefits
-Clean and structured data.
-Improved data quality.
-Optimized for analytics.
-4. Gold Layer (Business Ready Data)
-Objective
-Create curated datasets for reporting and analytics.
-Input
-Data from the Silver layer.
-Storage Format
-Delta Lake
-Example
+```
+
+## Benefits
+
+* Improved data quality
+* Consistent schema
+* Analytics-ready datasets
+* Faster downstream processing
+
+---
+
+# 🥇 Gold Layer - Business Layer
+
+## Objective
+
+Create curated business-ready datasets optimized for reporting and analytics.
+
+## Storage Format
+
+**Delta Lake**
+
+### Example
+
+```python
 df_zone.write.format("delta") \
     .mode("append") \
     .option("path", gold_path) \
     .saveAsTable("gold.trip_zone")
-Delta Lake Features Implemented
-ACID Transactions
-Reliable updates and deletes.
-Example:
+```
+
+---
+
+# ⚡ Delta Lake Features Implemented
+
+## ACID Transactions
+
+```sql
 UPDATE gold.trip_zone
 SET Borough = 'EMR'
 WHERE LocationID = 1;
-Delete Operations
+```
+
+## Delete Operations
+
+```sql
 DELETE FROM gold.trip_zone
 WHERE LocationID = 1;
-Time Travel
-Restore previous table versions.
+```
+
+## Time Travel
+
+```sql
 RESTORE gold.trip_zone
 TO VERSION AS OF 2;
-History Tracking
+```
+
+## History Tracking
+
+```sql
 DESCRIBE HISTORY gold.trip_zone;
-Gold Layer Benefits
-Business-ready datasets.
-High-performance analytics.
-Data versioning.
-Historical recovery.
-Reliable reporting.
-Reporting Layer
-Tools
-Power BI
-SQL Analytics
-Purpose
-The Gold Layer serves as the trusted source for dashboards and reporting.
-Typical business insights include:
-Trip volume analysis
-Revenue analysis
-Pickup and drop-off trends
-Borough-wise performance
-Zone-wise demand analysis
-Folder Structure
-project/
+```
+
+---
+
+## Benefits of Delta Lake
+
+* Reliable transactions
+* Data versioning
+* Historical recovery
+* Improved governance
+* Better performance for analytics
+
+---
+
+# 📊 Reporting Layer
+
+## Tools Used
+
+* Power BI
+* SQL Analytics
+
+## Business Insights
+
+The Gold Layer serves as the trusted source for analytics and reporting.
+
+Typical insights include:
+
+* Trip Volume Analysis
+* Revenue Trends
+* Pickup & Drop-off Analysis
+* Borough-wise Performance
+* Zone-wise Demand Analysis
+
+---
+
+# 📁 Repository Structure
+
+```text
+NYC-Taxi-Data-Engineering/
 │
-├── notebooks/
-│   ├── silver_notebook.ipynb
-│   └── gold_notebook.ipynb
-│
-├── architecture/
-│   └── architecture-diagram.png
-│
-├── datasets/
-│
+├── silver_notebook.ipynb
+├── gold_notebook.ipynb
+├── architecture-diagram.png
 └── README.md
-Key Learning Outcomes
-Azure Data Factory orchestration
-Azure Data Lake Gen2 implementation
-Service Principal authentication
-Azure Key Vault integration
-Databricks Secret Scopes
-PySpark transformations
-Medallion Architecture
-Delta Lake implementation
-Time Travel and Versioning
-End-to-End Data Engineering Pipeline
-Author
-Shail Gajjar
+```
+
+---
+
+# ▶️ How to Run
+
+### Step 1: Data Ingestion
+
+Run Azure Data Factory pipelines to ingest source data into ADLS Gen2.
+
+### Step 2: Configure Security
+
+* Create Azure Key Vault
+* Store Client ID, Client Secret, and Tenant ID
+* Create Databricks Secret Scope
+
+### Step 3: Execute Silver Layer
+
+Run:
+
+```text
+silver_notebook.ipynb
+```
+
+This notebook performs data cleansing and transformations.
+
+### Step 4: Execute Gold Layer
+
+Run:
+
+```text
+gold_notebook.ipynb
+```
+
+This notebook creates Delta Lake tables for analytics.
+
+### Step 5: Reporting
+
+Connect Power BI to Gold Layer datasets and create dashboards.
+
+---
+
+# 🎯 Key Learning Outcomes
+
+* Azure Data Factory Orchestration
+* Azure Data Lake Storage Gen2
+* Azure Databricks & PySpark
+* Azure Key Vault Integration
+* Databricks Secret Scopes
+* Service Principal Authentication
+* Medallion Architecture
+* Delta Lake Implementation
+* ACID Transactions
+* Time Travel & Versioning
+* End-to-End Data Engineering Pipeline
+
+---
+
+# 👨‍💻 Author
+
+**Harikrishna Patel**
+
 Azure Data Engineering Project – NYC Taxi Analytics Platform
